@@ -1,0 +1,18 @@
+:root {
+  /* Brand / HMS Theme */
+  --primary: #c49a4c;
+  --primary-dark: #b38a3c;
+  --sidebar-bg: #d8b26e;
+  --sidebar-active: #c49a4c;
+
+  /* Base colors */
+  --bg: #f4f6f8;
+  --card: #ffffff;
+
+  /* Text */
+  --text: #111827;
+  --muted: #6b7280;
+
+  /* UI */
+  --radius: 10px;
+}

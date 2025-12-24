@@ -27,6 +27,9 @@ export default function AdminLayout() {
           <NavLink to="/admin/announcements">
             Announcement
           </NavLink>
+          <NavLink to="/admin/staff">
+          Staff
+          </NavLink>
 
           <NavLink to="/admin/events">
             <span>Events</span>

@@ -24,6 +24,8 @@ import AdminListings from "../pages/admin/Listings";
 import AdminRules from "../pages/admin/Rules";
 import AdminWishlist from "../pages/admin/Wishlist";
 import Events from "../pages/admin/Events";
+import Staff from "../pages/admin/Staff";
+
 
 
 export default function AppRoutes() {
@@ -63,6 +65,8 @@ export default function AppRoutes() {
         <Route path="rules" element={<AdminRules />} />
         <Route path="wishlist" element={<AdminWishlist />} />
         <Route path="/admin/events" element={<Events />} />
+        <Route path="/admin/staff" element={<Staff />} />
+
       </Route>
 
     </Routes>

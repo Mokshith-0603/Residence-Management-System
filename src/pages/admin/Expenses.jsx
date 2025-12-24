@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  Timestamp,
+  deleteDoc,
+  updateDoc,
+  doc
+} from "firebase/firestore";
+import { db } from "../../services/firebase";
 
 import {
   saveMaintenanceBill,
@@ -21,11 +31,96 @@ export default function Expenses() {
     amount: ""
   });
 
+  /* ================= EXPENSE STATES ================= */
+  const [expenses, setExpenses] = useState([]);
+
+  const [expenseForm, setExpenseForm] = useState({
+    title: "",
+    amount: "",
+    date: ""
+  });
+
+  const [totalExpenses, setTotalExpenses] = useState(0);
+  const [editingExpenseIndex, setEditingExpenseIndex] = useState(null);
+
   /* ================= HELPER: SORT BY HOUSE NO ================= */
   const sortByHouseNo = (list) =>
     [...list].sort(
       (a, b) => Number(a.houseNo) - Number(b.houseNo)
     );
+
+  /* ================= LOAD EXPENSES ================= */
+  const loadExpenses = async () => {
+    const snapshot = await getDocs(collection(db, "expenses"));
+
+    const data = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    setExpenses(data);
+
+    const total = data.reduce(
+      (sum, e) => sum + Number(e.amount),
+      0
+    );
+
+    setTotalExpenses(total);
+  };
+
+  /* ================= ADD EXPENSE ================= */
+  const addExpense = async () => {
+    if (
+      !expenseForm.title ||
+      !expenseForm.amount ||
+      !expenseForm.date
+    ) {
+      alert("Please fill all expense fields");
+      return;
+    }
+
+    await addDoc(collection(db, "expenses"), {
+      title: expenseForm.title,
+      amount: Number(expenseForm.amount),
+      date: expenseForm.date,
+      createdAt: Timestamp.now()
+    });
+
+    setExpenseForm({ title: "", amount: "", date: "" });
+    loadExpenses();
+  };
+  /* ================= EDIT EXPENSE ================= */
+const startEditExpense = (index) => {
+  setEditingExpenseIndex(index);
+  setExpenseForm({
+    title: expenses[index].title,
+    amount: expenses[index].amount,
+    date: expenses[index].date
+  });
+};
+
+const saveEditExpense = async () => {
+  const expense = expenses[editingExpenseIndex];
+
+  await updateDoc(doc(db, "expenses", expense.id), {
+    title: expenseForm.title,
+    amount: Number(expenseForm.amount),
+    date: expenseForm.date
+  });
+
+  setEditingExpenseIndex(null);
+  setExpenseForm({ title: "", amount: "", date: "" });
+  loadExpenses();
+};
+
+/* ================= DELETE EXPENSE ================= */
+const deleteExpense = async (id) => {
+  if (!window.confirm("Delete this expense?")) return;
+
+  await deleteDoc(doc(db, "expenses", id));
+  loadExpenses();
+};
+
 
   /* ================= LOAD BILL FROM FIRESTORE ================= */
   useEffect(() => {
@@ -33,13 +128,14 @@ export default function Expenses() {
       const bills = await getMaintenanceBills();
 
       if (bills.length > 0) {
-        const bill = bills[0]; // single active bill
+        const bill = bills[0];
         setBillId(bill.id);
         setBillTitle(bill.title);
         setEntries(sortByHouseNo(bill.entries || []));
       }
     }
 
+    loadExpenses();
     loadBill();
   }, []);
 
@@ -88,7 +184,7 @@ export default function Expenses() {
     setEntries(sortByHouseNo(updated));
   };
 
-  /* ================= SAVE BILL (FIRESTORE) ================= */
+  /* ================= SAVE BILL ================= */
   const saveBill = async () => {
     if (!billTitle || entries.length === 0) {
       alert("Bill title or entries missing");
@@ -112,36 +208,78 @@ export default function Expenses() {
 
   /* ================= PDF ================= */
   const downloadPDF = () => {
-    if (!billTitle || entries.length === 0) {
-      alert("Nothing to download");
-      return;
-    }
+  if (!billTitle || entries.length === 0) {
+    alert("Nothing to download");
+    return;
+  }
 
-    const sortedEntries = sortByHouseNo(entries);
+  const sortedEntries = sortByHouseNo(entries);
 
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text(billTitle, 14, 20);
+  const totalIncome = sortedEntries.reduce(
+    (sum, e) => sum + Number(e.amount),
+    0
+  );
+
+  const doc = new jsPDF();
+
+  /* ================= TITLE ================= */
+  doc.setFontSize(18);
+  doc.text(billTitle, 14, 20);
+
+  /* ================= BILL ENTRIES TABLE ================= */
+  autoTable(doc, {
+    startY: 30,
+    head: [["S.No", "Name", "House No", "Date", "Amount"]],
+    body: sortedEntries.map((e, i) => [
+      i + 1,
+      e.name,
+      e.houseNo,
+      e.date,
+      `₹ ${e.amount}`
+    ]),
+    theme: "grid"
+  });
+
+  let currentY = doc.lastAutoTable.finalY + 10;
+
+  /* ================= EXPENSES TABLE ================= */
+  if (expenses.length > 0) {
+    doc.setFontSize(14);
+    doc.text("Expenses", 14, currentY);
 
     autoTable(doc, {
-      startY: 30,
-      head: [["S.No", "Name", "House No", "Date", "Amount"]],
-      body: sortedEntries.map((e, i) => [
+      startY: currentY + 5,
+      head: [["S.No", "Title", "Amount", "Date"]],
+      body: expenses.map((e, i) => [
         i + 1,
-        e.name,
-        e.houseNo,
-        e.date,
-        `₹ ${e.amount}`
+        e.title,
+        `Rs. ${e.amount}`,
+        e.date
       ]),
       theme: "grid"
     });
 
+    currentY = doc.lastAutoTable.finalY + 10;
+  }
+
+  /* ================= SUMMARY ================= */
+  doc.setFontSize(14);
+  doc.text("Summary", 14, currentY);
+
+  doc.setFontSize(12);
+  doc.text(`Total Income: Rs. ${totalIncome}`, 14, currentY + 8);
+  doc.text(`Total Expenses: Rs. ${totalExpenses}`, 14, currentY + 16);
     doc.save(`${billTitle}.pdf`);
   };
 
   const resetForm = () => {
     setForm({ name: "", houseNo: "", date: "", amount: "" });
   };
+
+  const totalIncome = entries.reduce(
+    (sum, e) => sum + Number(e.amount),
+    0
+  );
 
   /* ================= UI ================= */
   return (
@@ -205,9 +343,9 @@ export default function Expenses() {
         )}
       </div>
 
-      {/* TABLE */}
+      {/* BILL TABLE */}
       <div className="card">
-        <h3>Bill Entries</h3>
+        <h3>Bill Entries(Income)</h3>
 
         {entries.length === 0 ? (
           <p>No entries added yet</p>
@@ -223,7 +361,6 @@ export default function Expenses() {
                 <th>Action</th>
               </tr>
             </thead>
-
             <tbody>
               {entries.map((e, i) => (
                 <tr key={i}>
@@ -232,19 +369,9 @@ export default function Expenses() {
                   <td>{e.houseNo}</td>
                   <td>{e.date}</td>
                   <td>₹ {e.amount}</td>
-                  <td className="action-cell">
-                    <button
-                      className="secondary-btn"
-                      onClick={() => startEdit(i)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="danger-btn"
-                      onClick={() => deleteEntry(i)}
-                    >
-                      Delete
-                    </button>
+                  <td>
+                    <button className="btn btn-edit" onClick={() => startEdit(i)}>Edit</button>
+                    <button className="btn btn-delete" onClick={() => deleteEntry(i)}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -252,15 +379,124 @@ export default function Expenses() {
           </table>
         )}
 
-        <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
-          <button className="primary-btn" onClick={saveBill}>
-            Save Bill
-          </button>
-          <button className="secondary-btn" onClick={downloadPDF}>
-            Download PDF
-          </button>
-        </div>
+        <button className="btn btn-primary" onClick={saveBill}>Save Bill</button>
+        
       </div>
+
+      {/* ================= EXPENSES ================= */}
+      <div className="card">
+        <h3>Expenses</h3>
+
+        <div className="form-grid">
+          <input
+            placeholder="Expense Title"
+            value={expenseForm.title}
+            onChange={(e) =>
+              setExpenseForm({ ...expenseForm, title: e.target.value })
+            }
+          />
+          <input
+            type="number"
+            placeholder="Amount"
+            value={expenseForm.amount}
+            onChange={(e) =>
+              setExpenseForm({ ...expenseForm, amount: e.target.value })
+            }
+          />
+          <input
+            placeholder="date"
+            value={expenseForm.date}
+            onChange={(e) =>
+              setExpenseForm({ ...expenseForm, date: e.target.value })
+            }
+          />
+        </div>
+
+        {editingExpenseIndex !== null ? (
+  <button className="btn btn-primary" onClick={saveEditExpense}>
+    Save Expense
+  </button>
+) : (
+  <button className="btn btn-success" onClick={addExpense}>
+    Add Expense
+  </button>
+)}
+
+
+        {expenses.length > 0 && (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {expenses.map((e, i) => (
+                <tr key={e.id}>
+                  <td>{i + 1}</td>
+                  <td>{e.title}</td>
+                  <td>₹ {e.amount}</td>
+                  <td>{e.date}</td>
+<td>
+  <button
+    className="btn btn-edit"
+    onClick={() => startEditExpense(i)}
+  >
+    Edit
+  </button>
+  <button
+    className="btn btn-delete"
+    onClick={() => deleteExpense(e.id)}
+  >
+    Delete
+  </button>
+</td>
+
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* ================= SUMMARY ================= */}
+      {/* ================= SUMMARY HIGHLIGHTS ================= */}
+<div className="dashboard-grid modern" style={{ marginTop: "16px" }}>
+
+  <div className="dashboard-card modern">
+    <div className="card-icon">💵</div>
+    <div>
+      <p className="card-title">Total Income</p>
+      <h3 className="card-value">₹ {totalIncome}</h3>
+      <p className="card-sub">Maintenance collected</p>
+    </div>
+  </div>
+
+  <div className="dashboard-card modern">
+    <div className="card-icon">💰</div>
+    <div>
+      <p className="card-title">Total Expenses</p>
+      <h3 className="card-value">₹ {totalExpenses}</h3>
+      <p className="card-sub">Expenses logged</p>
+    </div>
+  </div>
+
+</div>
+
+      {/* ================= DOWNLOAD PDF ================= */}
+<div className="card" style={{ textAlign: "center" }}>
+  <button
+    className="primary-btn"
+    onClick={downloadPDF}
+    style={{ padding: "12px 24px", fontSize: "16px" }}
+  >
+    Download Full Report PDF
+  </button>
+</div>
     </section>
   );
 }

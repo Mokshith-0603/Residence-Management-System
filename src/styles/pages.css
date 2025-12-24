@@ -1607,6 +1607,54 @@
   font-size: 14px;
   margin-top: 10px;
 }
+/* ================= BUTTON STYLES ================= */
+.btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Primary (Save Bill, Download PDF) */
+.btn-primary {
+  background-color: #2563eb;
+  color: white;
+}
+.btn-primary:hover {
+  background-color: #1d4ed8;
+}
+
+/* Success (Add Expense) */
+.btn-success {
+  background-color: #16a34a;
+  color: white;
+}
+.btn-success:hover {
+  background-color: #15803d;
+}
+
+/* Edit */
+.btn-edit {
+  background-color: #facc15;
+  color: #1f2937;
+  margin-right: 6px;
+}
+.btn-edit:hover {
+  background-color: #eab308;
+}
+
+/* Delete */
+.btn-delete {
+  background-color: #ef4444;
+  color: white;
+}
+.btn-delete:hover {
+  background-color: #dc2626;
+}
+
 
 /* Responsive */
 @media (max-width: 1024px) {
@@ -1687,4 +1735,154 @@
 .empty-text {
   margin-top: 20px;
   color: #777;
+}
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.event-card {
+  display: flex;
+  align-items: center;
+  background: #e1b86a;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.event-date {
+  width: 60px;
+  background: #000;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 6px;
+  margin-right: 12px;
+}
+
+.event-date .day {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.event-date .month {
+  font-size: 12px;
+}
+
+.event-info h4 {
+  margin: 0;
+}
+
+.event-info p {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+/* ================= UPCOMING EVENTS (HOME PAGE) ================= */
+
+.upcoming-events {
+  margin-top: 40px;
+}
+
+.upcoming-events h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.events-list {
+  list-style: none;
+  padding: 0;
+  max-width: 600px;
+}
+
+.event-item {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease;
+}
+
+.event-item:hover {
+  transform: translateY(-3px);
+}
+
+.event-date {
+  background: #d8b26c;
+  color: #000;
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
+  min-width: 60px;
+}
+
+.event-date .day {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.event-date .month {
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.event-info h4 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.event-info p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #555;
+}
+/* ================= STAFF MEMBERS ================= */
+
+.staff-section {
+  margin-top: 50px;
+}
+
+.staff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.staff-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease;
+}
+
+.staff-card:hover {
+  transform: translateY(-4px);
+}
+
+.staff-avatar {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.staff-card h4 {
+  margin: 6px 0;
+  font-size: 18px;
+}
+
+.staff-role {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.staff-contact {
+  font-size: 14px;
+  font-weight: 600;
 }

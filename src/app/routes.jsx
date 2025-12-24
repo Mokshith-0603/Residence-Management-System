@@ -23,6 +23,8 @@ import AdminReports from "../pages/admin/Reports";
 import AdminListings from "../pages/admin/Listings";
 import AdminRules from "../pages/admin/Rules";
 import AdminWishlist from "../pages/admin/Wishlist";
+import Events from "../pages/admin/Events";
+
 
 export default function AppRoutes() {
   return (
@@ -37,6 +39,7 @@ export default function AppRoutes() {
         <Route path="/residents" element={<PublicResidents />} />
         <Route path="/announcements" element={<PublicAnnouncements />} />
         <Route path="/wishlist" element={<PublicWishlist />} />
+        
       </Route>
 
       {/* ================= ADMIN AUTH ================= */}
@@ -59,6 +62,7 @@ export default function AppRoutes() {
         <Route path="listings" element={<AdminListings />} />
         <Route path="rules" element={<AdminRules />} />
         <Route path="wishlist" element={<AdminWishlist />} />
+        <Route path="/admin/events" element={<Events />} />
       </Route>
 
     </Routes>

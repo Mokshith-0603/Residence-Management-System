@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { listenToDashboardStats } from "../../services/dashboard.service";
+import { listenToUpcomingEvents } from "../../services/dashboard.service";
+
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -7,13 +9,22 @@ export default function Dashboard() {
     listings: 0,
     amenities: 0,
     reports: 0,
-    expenses: 0
+    expenses: 0,
+    income: 0
   });
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+
 
   useEffect(() => {
-    const unsub = listenToDashboardStats(setStats);
-    return () => unsub();
-  }, []);
+  const unsubStats = listenToDashboardStats(setStats);
+  const unsubEvents = listenToUpcomingEvents(setUpcomingEvents);
+
+  return () => {
+    unsubStats();
+    unsubEvents();
+  };
+}, []);
+
 
   const happyResidents = stats.residents * 5;
   const housesCount = stats.residents;
@@ -63,6 +74,14 @@ export default function Dashboard() {
           subtitle="Records logged"
           icon="💰"
         />
+
+        {/* TOTAL INCOME (NEW) */}
+<DashboardCard
+  title="Total Income"
+  value={`₹ ${stats.income}`}
+  subtitle="Maintenance collected"
+  icon="💵"
+/>
       </div>
     </section>
   );

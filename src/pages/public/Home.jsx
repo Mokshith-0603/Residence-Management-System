@@ -1,4 +1,13 @@
+import { useEffect, useState } from "react";
+import { listenToUpcomingEvents } from "../../services/dashboard.service";
+
 export default function Home() {
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+useEffect(() => {
+  const unsub = listenToUpcomingEvents(setUpcomingEvents);
+  return () => unsub();
+}, []);
+
   return (
     <>
       {/* HERO SECTION */}
@@ -53,6 +62,60 @@ Through our Residence Management System, residents and administrators stay seaml
       <p>Professional security personnel</p>
     </div>
   </div>
+  {/* ================= STAFF MEMBERS ================= */}
+<section className="section staff-section">
+  <h2 className="section-title">Staff Members</h2>
+
+  <div className="staff-grid">
+
+    <div className="staff-card">
+      <div className="staff-avatar">👨‍💼</div>
+      <h4>Ramesh Kumar</h4>
+      <p className="staff-role">Estate Manager</p>
+      <p className="staff-contact">📞 9876543210</p>
+    </div>
+
+    <div className="staff-card">
+      <div className="staff-avatar">👩‍💼</div>
+      <h4>Sneha Reddy</h4>
+      <p className="staff-role">Accounts Officer</p>
+      <p className="staff-contact">📞 9123456780</p>
+    </div>
+
+    <div className="staff-card">
+      <div className="staff-avatar">🧑‍🔧</div>
+      <h4>Mahesh</h4>
+      <p className="staff-role">Maintenance Supervisor</p>
+      <p className="staff-contact">📞 9988776655</p>
+    </div>
+
+  </div>
+</section>
+
+  <section className="section upcoming-events">
+  <h2>Upcoming Events</h2>
+
+  <ul className="events-list">
+    {upcomingEvents.map(event => (
+      <li key={event.id} className="event-item">
+        <div className="event-date">
+          <div className="day">
+            {new Date(event.date).getDate()}
+          </div>
+          <div className="month">
+            {new Date(event.date).toLocaleString("en-US", { month: "short" })}
+          </div>
+        </div>
+
+        <div className="event-info">
+          <h4>{event.title}</h4>
+          <p>{event.date} • {event.time}</p>
+        </div>
+      </li>
+    ))}
+  </ul>
+</section>
+
 </section>
 
     </>
